@@ -1,0 +1,304 @@
+openapi: 3.0.3
+
+info:
+  version: 0.0.1-SNAPSHOT
+  title: Acceptance Tests Example
+
+servers:
+  - url: /api/v1
+
+security: [ ]
+
+tags:
+  - name: Books
+
+paths:
+
+  /books:
+    post:
+      summary: Create Book
+      tags:
+        - Books
+      operationId: createBook
+      requestBody:
+        $ref: '#/components/requestBodies/CreateBookPayload'
+      responses:
+        201:
+          $ref: '#/components/responses/BookResponse'
+        400:
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      tags:
+        - Books
+      summary: Get Books
+      operationId: getBooks
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/pagination_books_sort'
+        - $ref: '#/components/parameters/pagination_page_num'
+        - $ref: '#/components/parameters/pagination_page_size'
+      responses:
+        200:
+          $ref: '#/components/responses/BooksResponse'
+        400:
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+  /books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/p_id'
+    put:
+      summary: Update Book
+      description: Update Book by the given id.
+      tags:
+        - Books
+      operationId: updateBook
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateBookPayload'
+      responses:
+        200:
+          $ref: '#/components/responses/BookResponse'
+        400:
+          $ref: '#/components/responses/ValidationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    get:
+      summary: Get Book
+      tags:
+        - Books
+      operationId: getBook
+      responses:
+        200:
+          $ref: '#/components/responses/BookResponse'
+        400:
+          $ref: '#/components/responses/ValidationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+    delete:
+      summary: Delete Book
+      tags:
+        - Books
+      operationId: deleteBook
+      responses:
+        204:
+          $ref: '#/components/responses/NoContentResponse'
+        400:
+          $ref: '#/components/responses/ValidationError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnknownError'
+
+components:
+  headers:
+    X-Total-Count:
+      description: The total results for the particular query.
+      schema:
+        type: number
+        format: int64
+    X-Element-Count:
+      description: The element for the current page.
+      schema:
+        type: number
+        format: int64
+    X-Total-Pages:
+      description: The total amount of pages for the particular query.
+      schema:
+        type: number
+        format: int64
+    Location:
+      description: Provides information about the location of a newly created resource.
+      schema:
+        type: string
+
+  schemas:
+    CreateBook:
+      description: A representation of Create Book entity.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the book
+
+    Book:
+      description: A representation of Book entity.
+      type: object
+      properties:
+        id:
+          description: The ID of the Book.
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Name of the book
+
+    UpdateBook:
+      description: A representation of Update Book entity.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the book
+
+    Error:
+      type: object
+      description: Representation of an Error that can appear using the application.
+      properties:
+        Id:
+          description: The Correlation ID sent in the request header.
+          readOnly: true
+          type: string
+        Code:
+          description: The code of an error that describes the Error.
+          readOnly: true
+          type: string
+        Description:
+          description: The message of an error that describes the Error.
+          type: string
+          readOnly: true
+        Path:
+          description: The Path of an error that describes where it occurred.
+          type: string
+          readOnly: true
+        AdditionalInfo:
+          description: The additional info of an error
+          type: string
+          readOnly: true
+        Context:
+          description: The context of an error.
+          type: object
+          readOnly: true
+          additionalProperties:
+            type: string
+
+
+  responses:
+    NoContentResponse:
+      description: The request was successfully processed.
+
+    BookResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Book"
+
+    BooksResponse:
+      description: OK
+      headers:
+        X-Total-Count:
+          $ref: '#/components/headers/X-Total-Count'
+        X-Element-Count:
+          $ref: '#/components/headers/X-Element-Count'
+        X-Total-Pages:
+          $ref: '#/components/headers/X-Total-Pages'
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Book"
+    ValidationError:
+      description: The payload contains an error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFoundError:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnknownError:
+      description: The unknown error appeared. Check your payload or contact support.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  requestBodies:
+    CreateBookPayload:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateBook"
+    UpdateBookPayload:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateBook"
+
+  parameters:
+    # Book
+    name:
+      in: query
+      name: name
+      schema:
+        type: string
+    pagination_books_sort:
+      in: query
+      name: sort
+      style: form
+      explode: false
+      description: |
+        In order to execute *asc*, you need to specify in the search *createdAt* parameter.
+        In order to complete the *desc* sorting must be specified in the query parameter *-createdAt*
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [ "createdAt", "-createdAt" ]
+
+    # Generic
+    id:
+      in: query
+      name: id
+      schema:
+        type: string
+        format: uuid
+    p_id:
+      in: path
+      name: id
+      schema:
+        type: string
+        format: uuid
+      required: true
+    pagination_page_num:
+      in: query
+      name: page_num
+      schema:
+        type: integer
+        default: 0
+    pagination_page_size:
+      in: query
+      name: page_size
+      schema:
+        type: integer
+        default: 10
+      required: false
+    filter:
+      in: query
+      name: filter
+      description: Well known rsql filter language supporting defined query parameters.
+      example: name=out=(Harry Potter) and name=Vendetta
+      schema:
+        type: string
+      required: false
+
+  securitySchemes: { }

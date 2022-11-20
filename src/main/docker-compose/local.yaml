@@ -1,0 +1,17 @@
+---
+version: '3'
+services:
+  postgres:
+    image: postgres:10.0-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: book
+    ports:
+      - 25432:5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
