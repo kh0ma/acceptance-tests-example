@@ -16,9 +16,12 @@
     <properties>
         <java.version>17</java.version>
         <package.name>com.kh0ma.playground.acceptance.test.example.api</package.name>
+        <client.package.name>${package.name}.client</client.package.name>
         <openapi.generator.maven.plugin.version>6.0.1</openapi.generator.maven.plugin.version>
         <mapstruct.spring.version>0.1.2</mapstruct.spring.version>
         <mapstruct.version>1.5.2.Final</mapstruct.version>
+        <testcontainers.version>1.17.3</testcontainers.version>
+        <openapi-spec.path>${project.basedir}/src/main/openapi/openapi.yaml</openapi-spec.path>
     </properties>
     <dependencies>
         <dependency>
@@ -82,7 +85,291 @@
             <artifactId>mapstruct-spring-annotations</artifactId>
             <version>${mapstruct.spring.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>acceptance-tests</id>
+            <dependencies>
+<!--                <dependency>-->
+<!--                    <groupId>org.junit.vintage</groupId>-->
+<!--                    <artifactId>junit-vintage-engine</artifactId>-->
+<!--                    <scope>test</scope>-->
+<!--                </dependency>-->
+
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <scope>test</scope>
+                    <version>${testcontainers.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>kafka</artifactId>
+                    <scope>test</scope>
+                    <version>${testcontainers.version}</version>
+                </dependency>
+
+
+
+                <!-- Dependencies required for generated client code. START -->
+                <dependency>
+                    <groupId>io.swagger</groupId>
+                    <artifactId>swagger-annotations</artifactId>
+                    <version>${swagger-annotations-version}</version>
+                </dependency>
+
+                <!-- @Nullable annotation -->
+                <dependency>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                    <version>${jsr305.version}</version>
+                </dependency>
+
+                <!-- HTTP client: Netflix Feign -->
+                <dependency>
+                    <groupId>io.github.openfeign</groupId>
+                    <artifactId>feign-core</artifactId>
+                    <version>${feign-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.github.openfeign</groupId>
+                    <artifactId>feign-jackson</artifactId>
+                    <version>${feign-version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.core</groupId>
+                            <artifactId>jackson-databind</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>io.github.openfeign</groupId>
+                    <artifactId>feign-slf4j</artifactId>
+                    <version>${feign-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.github.openfeign.form</groupId>
+                    <artifactId>feign-form</artifactId>
+                    <version>${feign-form-version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-api</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>io.github.openfeign</groupId>
+                    <artifactId>feign-okhttp</artifactId>
+                    <version>${feign-version}</version>
+                </dependency>
+
+                <!-- JSON processing: jackson -->
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                    <version>${jackson-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                    <version>${jackson-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>${jackson-databind-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
+                    <version>${jackson-version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.github.scribejava</groupId>
+                    <artifactId>scribejava-core</artifactId>
+                    <version>${scribejava-version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.fasterxml.jackson.core</groupId>
+                            <artifactId>jackson-databind</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+
+                <dependency>
+                    <groupId>jakarta.annotation</groupId>
+                    <artifactId>jakarta.annotation-api</artifactId>
+                    <version>${jakarta-annotation-version}</version>
+                    <scope>provided</scope>
+                </dependency>
+                <!-- Dependencies required for generated client code. END -->
+            </dependencies>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+<!--                <cucumber.plugin>json:target/report.json</cucumber.plugin>-->
+                <service.jar.name>service.jar</service.jar.name>
+                <docker-dependencies.mount-folder>${basedir}/target/docker</docker-dependencies.mount-folder>
+
+                <!-- Properties required for generated client code -->
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                <swagger-annotations-version>1.6.6</swagger-annotations-version>
+                <feign-version>11.8</feign-version>
+                <feign-form-version>3.8.0</feign-form-version>
+                <jackson-version>2.13.3</jackson-version>
+                <jackson-databind-version>2.13.3</jackson-databind-version>
+                <jakarta-annotation-version>1.3.5</jakarta-annotation-version>
+                <junit-version>5.8.2</junit-version>
+                <maven-plugin-version>1.0.0</maven-plugin-version>
+                <scribejava-version>8.3.1</scribejava-version>
+                <jsr305.version>3.0.2</jsr305.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openapitools</groupId>
+                        <artifactId>openapi-generator-maven-plugin</artifactId>
+                        <version>${openapi.generator.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>client</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <inputSpec>${openapi-spec.path}</inputSpec>
+                                    <generatorName>java</generatorName>
+                                    <configOptions>
+                                        <library>feign</library>
+                                        <disallowAdditionalPropertiesIfNotPresent>false
+                                        </disallowAdditionalPropertiesIfNotPresent>
+                                        <modelPackage>${client.package.name}.dto</modelPackage>
+                                        <apiPackage>${client.package.name}.api</apiPackage>
+                                        <invokerPackage>${client.package.name}</invokerPackage>
+                                        <openApiNullable>false</openApiNullable>
+                                        <useRuntimeException>true</useRuntimeException>
+                                        <legacyDiscriminatorBehavior>true</legacyDiscriminatorBehavior>
+                                    </configOptions>
+                                    <generateModelTests>false</generateModelTests>
+                                    <generateModelDocumentation>false</generateModelDocumentation>
+                                    <generateApiTests>false</generateApiTests>
+                                    <generateApiDocumentation>false</generateApiDocumentation>
+                                    <modelNameSuffix>Dto</modelNameSuffix>
+                                    <output>${project.build.directory}/generated-sources/openapi/client</output>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-docker-dependencies</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>${project.groupId}</groupId>
+                                            <artifactId>${project.artifactId}</artifactId>
+                                            <version>${project.version}</version>
+                                            <type>jar</type>
+                                            <destFileName>${service.jar.name}</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <outputDirectory>${docker-dependencies.mount-folder}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+<!--                        <version>2.7</version>-->
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+<!--                        <version>3.1.0</version>-->
+                        <executions>
+                            <execution>
+                                <id>add-source</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>src/acceptance-test/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-resource</id>
+                                <phase>generate-test-resources</phase>
+                                <goals>
+                                    <goal>add-test-resource</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>src/acceptance-test/resources</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- block unit tests execution -->
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>${maven-failsafe-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <testFailureIgnore>true</testFailureIgnore>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/*AcceptanceTest.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+<!--                                <cucumber.plugin>${cucumber.plugin}</cucumber.plugin>-->
+                                <acceptance.test.environment.type>testcontainers</acceptance.test.environment.type>
+                                <acceptance.test.environment.testcontainers.service.jar.name>${service.jar.name}</acceptance.test.environment.testcontainers.service.jar.name>
+                                <acceptance.test.environment.testcontainers.service.jar.folder.path>${docker-dependencies.mount-folder}</acceptance.test.environment.testcontainers.service.jar.folder.path>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -134,7 +421,8 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/openapi/openapi.yaml</inputSpec>
+                            <id>service</id>
+                            <inputSpec>${openapi-spec.path}</inputSpec>
                             <generatorName>spring</generatorName>
                             <configOptions>
                                 <java8>true</java8>
@@ -153,8 +441,8 @@
                             <modelNameSuffix>Dto</modelNameSuffix>
                             <apiNameSuffix>Controller</apiNameSuffix>
                             <addCompileSourceRoot>true</addCompileSourceRoot> <!-- default -->
-                            <output>${project.build.directory}/generated-sources</output>
-<!--                            <templateDirectory>${project.basedir}/src/main/resources/openapigenerator/custom-templates</templateDirectory>-->
+                            <output>${project.build.directory}/generated-sources/openapi/service</output>
+                            <!--                            <templateDirectory>${project.basedir}/src/main/resources/openapigenerator/custom-templates</templateDirectory>-->
                             <typeMappings>
                                 <typeMapping>OffsetDateTime=LocalDateTime</typeMapping>
                             </typeMappings>
