@@ -274,7 +274,7 @@
                         <executions>
                             <execution>
                                 <id>copy-docker-dependencies</id>
-                                <phase>initialize</phase>
+                                <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>copy</goal>
                                 </goals>
